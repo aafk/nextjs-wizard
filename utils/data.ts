@@ -2,6 +2,8 @@ import { models } from "mongoose";
 import { formatCurrency, getMonthName } from "../app/lib/utils";
 import connectMongo from "@/utils/connect-mongo";
 
+const ITEMS_PER_PAGE = 6;
+
 export async function fetchRevenue() {
   try {
     await connectMongo();
@@ -82,8 +84,6 @@ export async function fetchCardData() {
     throw new Error("Failed to fetch card data.");
   }
 }
-
-const ITEMS_PER_PAGE = 6;
 
 export async function fetchFilteredInvoices(
   query: string,
@@ -330,8 +330,8 @@ export async function fetchFilteredCustomers(query: string, page: number = 0) {
       total_pending: formatCurrency(customer.total_pending),
       total_paid: formatCurrency(customer.total_paid),
     }));
-
     const pages = Math.ceil(count / ITEMS_PER_PAGE);
+
     return { items: customers, pages };
   } catch (err) {
     console.error("Database Error:", err);

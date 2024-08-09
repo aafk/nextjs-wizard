@@ -41,7 +41,7 @@ export default function CustomersTable({
 
   return (
     <InfiniteScroll
-      pageStart={2}
+      pageStart={0}
       hasMore={pages.length < totalPages}
       loadMore={loadMore}
       loader={<Loader key={0} />}
