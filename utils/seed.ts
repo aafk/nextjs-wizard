@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 config();
 
-import { models } from "mongoose";
+import { models, Schema } from "mongoose";
 import { faker } from "@faker-js/faker";
 import { createFakeUser } from "./models/user";
 import { createFakeRevenue } from "./models/revenue";
@@ -12,12 +12,12 @@ import connectMongo from "./connect-mongo";
 async function setup() {
   await connectMongo();
 
-  const hasData = await models.Invoice.find().countDocuments();
+  // const hasData = await models.Invoice.find().countDocuments();
 
-  if (hasData > 0) {
-    console.log("Database already exists with data");
-    return;
-  }
+  // if (hasData > 0) {
+  //   console.log("Database already exists with data");
+  //   return;
+  // }
 
   await models.User.insertMany(
     faker.helpers.multiple(createFakeUser, {
@@ -28,8 +28,8 @@ async function setup() {
   console.log("User done");
 
   const dates = faker.date.betweens({
-    from: "2020-01-01T00:00:00.000Z",
-    to: "2030-01-01T00:00:00.000Z",
+    from: "2010-01-01T00:00:00.000Z",
+    to: "2024-01-01T00:00:00.000Z",
     count: 40,
   });
 
@@ -45,20 +45,20 @@ async function setup() {
 
   await models.Customer.insertMany(
     faker.helpers.multiple(createFakeCustomer, {
-      count: 50,
+      count: 500,
     })
   );
 
   console.log("Customer done");
 
   const customers = await models.Customer.find();
-  const customerIds = customers.map((customer: { _id: string }) =>
-    customer._id.toString()
+  const customerIds: (typeof Schema.ObjectId)[] = customers.map(
+    (customer: { _id: typeof Schema.ObjectId }) => customer._id
   );
 
   let invoices: any[] = [];
 
-  [...Array(60)].forEach(() => {
+  [...Array(500)].forEach(() => {
     invoices.push(createFakeInvoice(customerIds));
   });
 

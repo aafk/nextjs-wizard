@@ -1,19 +1,9 @@
 import { models } from "mongoose";
-import {
-  CustomerField,
-  CustomersTableType,
-  InvoiceForm,
-  InvoicesTable,
-} from "../app/lib/definitions";
 import { formatCurrency, getMonthName } from "../app/lib/utils";
 import connectMongo from "@/utils/connect-mongo";
 
 export async function fetchRevenue() {
   try {
-    // Don't do this in production :)
-
-    // console.log('Fetching revenue data...');
-    // await new Promise((resolve) => setTimeout(resolve, 3000));
     await connectMongo();
     const data = await models.Revenue.find().sort({ month: -1 }).limit(12);
     const res = data.map((item) => {
@@ -21,8 +11,6 @@ export async function fetchRevenue() {
       item.month = getMonthName(item.month);
       return item;
     });
-
-    // console.log('Data fetch completed after 3 seconds.');
 
     return res;
   } catch (error) {
@@ -54,32 +42,19 @@ export async function fetchCardData() {
     await connectMongo();
     const invoiceCountPromise = models.Invoice.countDocuments();
     const customerCountPromise = models.Customer.countDocuments();
-    const invoicePaidPromise = models.Invoice.aggregate([
-      {
-        $match: {
-          status: "paid",
-        },
-      },
+    const invoicePromise = models.Invoice.aggregate([
       {
         $group: {
           _id: null,
-          amount: {
-            $sum: "$amount",
+          paid: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "paid"] }, "$amount", 0],
+            },
           },
-        },
-      },
-    ]);
-    const invoicePendingPromise = models.Invoice.aggregate([
-      {
-        $match: {
-          status: "pending",
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          amount: {
-            $sum: "$amount",
+          pending: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "pending"] }, "$amount", 0],
+            },
           },
         },
       },
@@ -88,14 +63,13 @@ export async function fetchCardData() {
     const data: any[] = await Promise.all([
       invoiceCountPromise,
       customerCountPromise,
-      invoicePaidPromise,
-      invoicePendingPromise,
+      invoicePromise,
     ]);
 
-    const numberOfInvoices = Number(data[0] ?? "0");
-    const numberOfCustomers = Number(data[1] ?? "0");
-    const totalPaidInvoices = formatCurrency(data[2][0].amount ?? "0");
-    const totalPendingInvoices = formatCurrency(data[3][0].amount ?? "0");
+    const numberOfInvoices = data[0] || 0;
+    const numberOfCustomers = data[1] || 0;
+    const totalPaidInvoices = formatCurrency(data[2]?.[0].paid ?? "0");
+    const totalPendingInvoices = formatCurrency(data[2]?.[0].pending ?? "0");
 
     return {
       numberOfCustomers,
@@ -119,12 +93,53 @@ export async function fetchFilteredInvoices(
 
   try {
     await connectMongo();
-    const data = await models.Invoice.find({})
-      .sort({ createdAt: -1 })
-      .populate("customer", "", "Customer")
-      .limit(ITEMS_PER_PAGE)
-      .skip(offset);
-    const invoices = data.map((item) => item.toJSON());
+    const invoices = await models.Invoice.aggregate([
+      {
+        $lookup: {
+          from: "customers",
+          localField: "customer",
+          foreignField: "_id",
+          as: "customer_info",
+        },
+      },
+      {
+        $unwind: "$customer_info",
+      },
+      {
+        $match: {
+          $or: [
+            { "customer_info.name": { $regex: query, $options: "i" } },
+            { "customer_info.email": { $regex: query, $options: "i" } },
+            { amount: { $regex: query, $options: "i" } },
+            { createdAt: { $regex: query, $options: "i" } },
+            { status: { $regex: query, $options: "i" } },
+          ],
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          id: { $toString: "$_id" },
+          amount: 1,
+          createdAt: 1,
+          status: 1,
+          name: "$customer_info.name",
+          email: "$customer_info.email",
+          image: "$customer_info.image",
+        },
+      },
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      {
+        $skip: offset,
+      },
+      {
+        $limit: ITEMS_PER_PAGE,
+      },
+    ]);
 
     return invoices;
   } catch (error) {
@@ -136,19 +151,36 @@ export async function fetchFilteredInvoices(
 export async function fetchInvoicesPages(query: string) {
   try {
     await connectMongo();
-    const count = await models.Invoice.find({}).countDocuments();
-    //   const count = await sql`SELECT COUNT(*)
-    //   FROM invoices
-    //   JOIN customers ON invoices.customer_id = customers.id
-    //   WHERE
-    //     customers.name ILIKE ${`%${query}%`} OR
-    //     customers.email ILIKE ${`%${query}%`} OR
-    //     invoices.amount::text ILIKE ${`%${query}%`} OR
-    //     invoices.date::text ILIKE ${`%${query}%`} OR
-    //     invoices.status ILIKE ${`%${query}%`}
-    // `;
+    const data = await models.Invoice.aggregate([
+      {
+        $lookup: {
+          from: "customers",
+          localField: "customer",
+          foreignField: "_id",
+          as: "customer_info",
+        },
+      },
+      {
+        $unwind: "$customer_info",
+      },
+      {
+        $match: {
+          $or: [
+            { "customer_info.name": { $regex: query, $options: "i" } },
+            { "customer_info.email": { $regex: query, $options: "i" } },
+            { amount: { $regex: query, $options: "i" } },
+            { date: { $regex: query, $options: "i" } },
+            { status: { $regex: query, $options: "i" } },
+          ],
+        },
+      },
+      {
+        $count: "totalCount",
+      },
+    ]);
+    const cnt = data[0]?.totalCount || 0;
 
-    const totalPages = Math.ceil(count / ITEMS_PER_PAGE);
+    const totalPages = Math.ceil(cnt / ITEMS_PER_PAGE);
     return totalPages;
   } catch (error) {
     console.error("Database Error:", error);
@@ -184,27 +216,115 @@ export async function fetchCustomers() {
   }
 }
 
-export async function fetchFilteredCustomers(query: string) {
+export async function fetchFilteredCustomers(query: string, page: number = 1) {
+  "use server";
   try {
-    const data = await sql<CustomersTableType>`
-		SELECT
-		  customers.id,
-		  customers.name,
-		  customers.email,
-		  customers.image_url,
-		  COUNT(invoices.id) AS total_invoices,
-		  SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending,
-		  SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
-		FROM customers
-		LEFT JOIN invoices ON customers.id = invoices.customer_id
-		WHERE
-		  customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`}
-		GROUP BY customers.id, customers.name, customers.email, customers.image_url
-		ORDER BY customers.name ASC
-	  `;
+    await connectMongo();
+    const offset = Math.max(page - 1, 0) * ITEMS_PER_PAGE;
+    const data = await models.Customer.aggregate([
+      {
+        $lookup: {
+          from: "invoices",
+          localField: "_id",
+          foreignField: "customer",
+          as: "invoices",
+        },
+      },
+      {
+        $match: {
+          $or: [
+            {
+              name: {
+                $regex: query,
+                $options: "i",
+              },
+            },
+            {
+              email: {
+                $regex: query,
+                $options: "i",
+              },
+            },
+          ],
+        },
+      },
+      {
+        $unwind: {
+          path: "$invoices",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $group: {
+          _id: {
+            id: "$_id",
+            name: "$name",
+            email: "$email",
+            image: "$image",
+          },
+          total_invoices: {
+            $sum: {
+              $cond: [
+                {
+                  $ifNull: ["$invoices._id", false],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+          total_pending: {
+            $sum: {
+              $cond: [
+                {
+                  $eq: ["$invoices.status", "pending"],
+                },
+                "$invoices.amount",
+                0,
+              ],
+            },
+          },
+          total_paid: {
+            $sum: {
+              $cond: [
+                {
+                  $eq: ["$invoices.status", "paid"],
+                },
+                "$invoices.amount",
+                0,
+              ],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          id: {
+            $toString: "$_id.id",
+          },
+          name: "$_id.name",
+          email: "$_id.email",
+          image: "$_id.image",
+          total_invoices: 1,
+          total_pending: 1,
+          total_paid: 1,
+        },
+      },
+      {
+        $sort: {
+          name: 1,
+        },
+      },
+      {
+        $skip: offset,
+      },
+      {
+        $limit: ITEMS_PER_PAGE,
+      },
+    ]);
 
-    const customers = data.rows.map((customer: any) => ({
+    const customers = data.map((customer: any) => ({
       ...customer,
       total_pending: formatCurrency(customer.total_pending),
       total_paid: formatCurrency(customer.total_paid),

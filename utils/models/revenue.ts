@@ -27,7 +27,6 @@ const Revenue = new Schema<IRevenue>(
         delete ret._id;
       },
     },
-    collection: "revenue",
   }
 );
 

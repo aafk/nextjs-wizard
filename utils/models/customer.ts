@@ -25,7 +25,6 @@ const Customer = new Schema(
         delete ret._id;
       },
     },
-    collection: "customer",
   }
 );
 

@@ -1,4 +1,4 @@
-import { model, models, Schema } from "mongoose";
+import { Schema } from "mongoose";
 import { faker } from "@faker-js/faker";
 import { hashSync } from "bcrypt";
 
@@ -40,7 +40,6 @@ const User = new Schema(
         delete ret._id;
       },
     },
-    collection: "user",
   }
 );
 

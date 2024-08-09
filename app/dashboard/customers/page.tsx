@@ -15,12 +15,17 @@ export default async function Page({
   };
 }) {
   const query = searchParams?.query || "";
+  const page = Number(searchParams?.page) || 1;
 
-  const customers = await fetchFilteredCustomers(query);
+  const initialItems = await fetchFilteredCustomers(query, page);
 
   return (
     <main>
-      <CustomersTable customers={customers} />
+      <CustomersTable
+        query={query}
+        initialItems={initialItems}
+        fetchItems={fetchFilteredCustomers}
+      />
     </main>
   );
 }
