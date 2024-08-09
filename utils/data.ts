@@ -93,7 +93,8 @@ export async function fetchFilteredInvoices(
 
   try {
     await connectMongo();
-    const invoices = await models.Invoice.aggregate([
+
+    const data = await models.Invoice.aggregate([
       {
         $lookup: {
           from: "customers",
@@ -117,85 +118,63 @@ export async function fetchFilteredInvoices(
         },
       },
       {
-        $project: {
-          _id: 0,
-          id: { $toString: "$_id" },
-          amount: 1,
-          createdAt: 1,
-          status: 1,
-          name: "$customer_info.name",
-          email: "$customer_info.email",
-          image: "$customer_info.image",
+        $facet: {
+          items: [
+            {
+              $project: {
+                _id: 0,
+                id: { $toString: "$_id" },
+                amount: 1,
+                createdAt: 1,
+                status: 1,
+                name: "$customer_info.name",
+                email: "$customer_info.email",
+                image: "$customer_info.image",
+              },
+            },
+            {
+              $sort: {
+                createdAt: -1,
+              },
+            },
+            {
+              $skip: offset,
+            },
+            {
+              $limit: ITEMS_PER_PAGE,
+            },
+          ],
+          count: [{ $count: "count" }],
         },
-      },
-      {
-        $sort: {
-          createdAt: -1,
-        },
-      },
-      {
-        $skip: offset,
-      },
-      {
-        $limit: ITEMS_PER_PAGE,
       },
     ]);
-
-    return invoices;
+    if (data.length === 0 || data[0].count.length === 0) {
+      return { items: [], pages: 0 };
+    }
+    const [
+      {
+        items = [],
+        count: [{ count = 0 }],
+      },
+    ] = data;
+    const pages = Math.ceil(count / ITEMS_PER_PAGE);
+    return { items, pages };
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch invoices.");
   }
 }
 
-export async function fetchInvoicesPages(query: string) {
-  try {
-    await connectMongo();
-    const data = await models.Invoice.aggregate([
-      {
-        $lookup: {
-          from: "customers",
-          localField: "customer",
-          foreignField: "_id",
-          as: "customer_info",
-        },
-      },
-      {
-        $unwind: "$customer_info",
-      },
-      {
-        $match: {
-          $or: [
-            { "customer_info.name": { $regex: query, $options: "i" } },
-            { "customer_info.email": { $regex: query, $options: "i" } },
-            { amount: { $regex: query, $options: "i" } },
-            { date: { $regex: query, $options: "i" } },
-            { status: { $regex: query, $options: "i" } },
-          ],
-        },
-      },
-      {
-        $count: "totalCount",
-      },
-    ]);
-    const cnt = data[0]?.totalCount || 0;
-
-    const totalPages = Math.ceil(cnt / ITEMS_PER_PAGE);
-    return totalPages;
-  } catch (error) {
-    console.error("Database Error:", error);
-    throw new Error("Failed to fetch total number of invoices.");
-  }
-}
-
 export async function fetchInvoiceById(id: string) {
   try {
     await connectMongo();
-    const data = await models.Invoice.findById(id);
-
+    const data = await models.Invoice.findById(id).populate(
+      "customer",
+      "",
+      "Customer"
+    );
     let invoice = data.toJSON();
     invoice.amount = invoice.amount / 100;
-
     return invoice;
   } catch (error) {
     console.error("Database Error:", error);
@@ -216,11 +195,11 @@ export async function fetchCustomers() {
   }
 }
 
-export async function fetchFilteredCustomers(query: string, page: number = 1) {
+export async function fetchFilteredCustomers(query: string, page: number = 0) {
   "use server";
   try {
     await connectMongo();
-    const offset = Math.max(page - 1, 0) * ITEMS_PER_PAGE;
+    const offset = Math.max(page, 0) * ITEMS_PER_PAGE;
     const data = await models.Customer.aggregate([
       {
         $lookup: {
@@ -298,39 +277,62 @@ export async function fetchFilteredCustomers(query: string, page: number = 1) {
         },
       },
       {
-        $project: {
-          _id: 0,
-          id: {
-            $toString: "$_id.id",
-          },
-          name: "$_id.name",
-          email: "$_id.email",
-          image: "$_id.image",
-          total_invoices: 1,
-          total_pending: 1,
-          total_paid: 1,
+        $facet: {
+          items: [
+            {
+              $project: {
+                _id: 0,
+                id: {
+                  $toString: "$_id.id",
+                },
+                name: "$_id.name",
+                email: "$_id.email",
+                image: "$_id.image",
+                total_invoices: 1,
+                total_pending: 1,
+                total_paid: 1,
+              },
+            },
+            {
+              $sort: {
+                name: 1,
+              },
+            },
+            {
+              $skip: offset,
+            },
+            {
+              $limit: ITEMS_PER_PAGE,
+            },
+          ],
+          count: [
+            {
+              $count: "count",
+            },
+          ],
         },
-      },
-      {
-        $sort: {
-          name: 1,
-        },
-      },
-      {
-        $skip: offset,
-      },
-      {
-        $limit: ITEMS_PER_PAGE,
       },
     ]);
 
-    const customers = data.map((customer: any) => ({
+    if (data.length === 0 || data[0].count.length === 0) {
+      return { items: [], pages: 0 };
+    }
+
+    const [
+      {
+        items = [],
+        count: [{ count = 0 }],
+      },
+    ] = data;
+
+    const customers = items.map((customer: any) => ({
       ...customer,
       total_pending: formatCurrency(customer.total_pending),
       total_paid: formatCurrency(customer.total_paid),
     }));
 
-    return customers;
+    const pages = Math.ceil(count / ITEMS_PER_PAGE);
+    return { items: customers, pages };
   } catch (err) {
     console.error("Database Error:", err);
     throw new Error("Failed to fetch customer table.");
