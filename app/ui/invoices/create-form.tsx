@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { CustomerField } from '@/app/lib/definitions';
-import Link from 'next/link';
+import { CustomerField } from "@/app/lib/definitions";
+import Link from "next/link";
 import {
   CheckIcon,
   ClockIcon,
   CurrencyDollarIcon,
   UserCircleIcon,
-} from '@heroicons/react/24/outline';
-import { Button } from '@/app/ui/button';
-import { createInvoice, State } from '@/app/lib/actions';
-import { useActionState } from 'react';
+} from "@heroicons/react/24/outline";
+import { Button } from "@/app/ui/button";
+import { createInvoice, State } from "@/app/lib/actions";
+import { useActionState } from "react";
 
 export default function Form({ customers }: { customers: CustomerField[] }) {
   const initialState: State = { message: null, errors: {} };
@@ -18,7 +18,7 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
 
   return (
     <form action={formAction}>
-      <div className="rounded-md bg-gray-50 p-4 md:p-6">
+      <div className="rounded-md bg-gray-100 p-4 md:p-6">
         {/* Customer Name */}
         <div className="mb-4">
           <label htmlFor="customer" className="mb-2 block text-sm font-medium">
@@ -89,7 +89,7 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
           <legend className="mb-2 block text-sm font-medium">
             Set the invoice status
           </legend>
-          <div className="rounded-md border border-gray-200 bg-white px-[14px] py-3">
+          <div className="rounded-md border border-gray-200 bg-gray-100 px-[14px] py-3">
             <div className="flex gap-4">
               <div className="flex items-center">
                 <input
@@ -97,11 +97,11 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
                   name="status"
                   type="radio"
                   value="pending"
-                  className="text-white-600 h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 focus:ring-2"
+                  className="text-gray-50-600 h-4 w-4 cursor-pointer border-gray-300 bg-gray-200 focus:ring-2"
                 />
                 <label
                   htmlFor="pending"
-                  className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600"
+                  className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600"
                 >
                   Pending <ClockIcon className="h-4 w-4" />
                 </label>
@@ -112,11 +112,11 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
                   name="status"
                   type="radio"
                   value="paid"
-                  className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
+                  className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-200 text-gray-600 focus:ring-2"
                 />
                 <label
                   htmlFor="paid"
-                  className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-green-500 px-3 py-1.5 text-xs font-medium text-white"
+                  className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-green-500 px-3 py-1.5 text-xs font-medium text-gray-50"
                 >
                   Paid <CheckIcon className="h-4 w-4" />
                 </label>
@@ -142,7 +142,7 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
       <div className="mt-6 flex justify-end gap-4">
         <Link
           href="/dashboard/invoices"
-          className="flex h-10 items-center rounded-lg bg-gray-100 px-4 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
+          className="flex h-10 items-center rounded-lg bg-gray-200 px-4 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-300"
         >
           Cancel
         </Link>

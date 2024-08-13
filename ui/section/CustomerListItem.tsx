@@ -7,7 +7,7 @@ export default function CustomerListItem({
   customer: FormattedCustomersTable;
 }) {
   return (
-    <div key={customer.id} className="mb-2 w-full rounded-md bg-white p-4">
+    <div key={customer.id} className="mb-2 w-full rounded-md bg-gray-100 p-4">
       <div className="flex items-center justify-between border-b pb-4">
         <div>
           <div className="mb-2 flex items-center">
@@ -22,7 +22,7 @@ export default function CustomerListItem({
               <p>{customer.name}</p>
             </div>
           </div>
-          <p className="text-sm text-gray-500">{customer.email}</p>
+          <p className="text-sm text-gray-50">{customer.email}</p>
         </div>
       </div>
       <div className="flex w-full items-center justify-between border-b py-5">

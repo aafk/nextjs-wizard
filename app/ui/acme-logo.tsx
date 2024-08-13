@@ -3,7 +3,7 @@ import { lusitana } from "@/app/ui/fonts";
 export default function AcmeLogo() {
   return (
     <div
-      className={`${lusitana.className} flex flex-row items-center leading-none text-white`}
+      className={`${lusitana.className} flex flex-row items-center leading-none text-gray-50`}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -23,7 +23,7 @@ export default function AcmeLogo() {
           <path d="M5.015 12.195L12 15.078l6.985-2.883" />
         </g>
       </svg>
-      <p className="text-3xl">GemPad</p>
+      <p className="text-3xl">Wizard</p>
     </div>
   );
 }
