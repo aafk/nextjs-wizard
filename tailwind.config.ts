@@ -8,13 +8,10 @@ const config: Config = {
       gridTemplateColumns: {
         "13": "repeat(13, minmax(0, 1fr))",
       },
-      colors: {
-        blue: {
-          400: "#2589FE",
-          500: "#0070F3",
-          600: "#2F6FEB",
-        },
-      },
+    },
+    fontFamily: {
+      sans: ["Graphik", "sans-serif"],
+      serif: ["Merriweather", "serif"],
     },
     keyframes: {
       shimmer: {
@@ -43,6 +40,11 @@ const config: Config = {
               900: "#18181b",
               950: "#030712",
             },
+            primary: {
+              400: "#fdba74",
+              500: "#fb923c",
+              600: "#f97316",
+            },
           },
         },
       },
@@ -63,6 +65,11 @@ const config: Config = {
                 800: "#e5e7eb",
                 900: "#f3f4f6",
                 950: "#f9fafb",
+              },
+              primary: {
+                400: "#3b82f6",
+                500: "#2563eb",
+                600: "#1d4ed8",
               },
             },
           },

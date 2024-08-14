@@ -3,7 +3,7 @@ import { lusitana } from "@/app/ui/fonts";
 export default function AcmeLogo() {
   return (
     <div
-      className={`${lusitana.className} flex flex-row items-center leading-none text-gray-50`}
+      className={`${lusitana.className} flex flex-row items-center leading-none`}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

@@ -5,7 +5,7 @@ import InfiniteScroll from "react-infinite-scroller";
 import { FormattedCustomersTable } from "@/app/lib/definitions";
 import CustomerListItem from "@/ui/section/CustomerListItem";
 import CustomerTableRow from "@/ui/section/CustomerTableRow";
-import Loader from "@/components/Loader";
+import Loader from "@/ui/Loader";
 
 type ItemsProps = {
   query: string;

@@ -2,7 +2,9 @@ import "@/app/ui/global.css";
 import { inter } from "@/app/ui/fonts";
 import { Metadata } from "next";
 import connectMongo from "@/utils/connect-mongo";
-import Providers from "@/components/ProgressBarProvider";
+import Providers from "@/ui/ProgressBarProvider";
+import ThemeModeSelector from "@/ui/ModeSelector";
+import ThemeModeProvider from "@/ui/theme-mode-provider";
 
 export const metadata: Metadata = {
   title: {
@@ -20,9 +22,12 @@ export default async function RootLayout({
 }) {
   await connectMongo();
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className={`${inter.className} antialiased`}>
-        <Providers>{children}</Providers>
+        <ThemeModeProvider>
+          <Providers>{children}</Providers>
+          <ThemeModeSelector />
+        </ThemeModeProvider>
       </body>
     </html>
   );
