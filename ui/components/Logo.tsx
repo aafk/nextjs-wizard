@@ -1,6 +1,6 @@
-export default function AcmeLogo() {
+export default function Logo() {
   return (
-    <div className="flex flex-row items-center leading-none">
+    <div className="flex flex-row items-center leading-none text-primary">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="1.2rem"

@@ -4,6 +4,10 @@ const config: Config = {
   darkMode: "class",
   content: ["./ui/**/*.{js,ts,jsx,tsx,mdx}", "./app/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
+    boxShadow: {
+      md: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+      primary: "0px 20px 20px -15px",
+    },
     extend: {
       gridTemplateColumns: {
         "13": "repeat(13, minmax(0, 1fr))",
@@ -19,6 +23,11 @@ const config: Config = {
           transform: "translateX(100%)",
         },
       },
+    },
+  },
+  variants: {
+    extend: {
+      boxShadow: ["active", "hover"],
     },
   },
   plugins: [
@@ -41,6 +50,7 @@ const config: Config = {
               950: "#030712",
             },
             primary: {
+              DEFAULT: "#fb923c",
               400: "#fdba74",
               500: "#fb923c",
               600: "#f97316",
@@ -51,6 +61,10 @@ const config: Config = {
       themes: [
         {
           name: "dark",
+          boxShadow: {
+            md: "0 4px 6px -1px rgba(256, 256, 256, 0.1), 0 2px 4px -1px rgba(256, 256, 256, 0.06)",
+            primary: "0px 20px 20px -15px",
+          },
           extend: {
             colors: {
               gray: {
@@ -67,6 +81,7 @@ const config: Config = {
                 950: "#f9fafb",
               },
               primary: {
+                DEFAULT: "#2563eb",
                 400: "#3b82f6",
                 500: "#2563eb",
                 600: "#1d4ed8",

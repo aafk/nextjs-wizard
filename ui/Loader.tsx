@@ -1,6 +1,6 @@
 export default function Loader() {
   return (
-    <div className="flex justify-center text-primary-500">
+    <div className="flex justify-center text-primary">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width={48}

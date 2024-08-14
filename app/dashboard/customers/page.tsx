@@ -3,7 +3,6 @@ import CustomersTable from "@/app/ui/customers/table";
 import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
 import { Metadata } from "next";
 import { Suspense } from "react";
-import { lusitana } from "@/app/ui/fonts";
 import Search from "@/app/ui/search";
 
 export const metadata: Metadata = {
@@ -23,9 +22,7 @@ export default async function Page({
 
   return (
     <div className="w-full">
-      <h1 className={`${lusitana.className} mb-8 text-xl md:text-2xl`}>
-        Customers
-      </h1>
+      <h1 className="mb-8 text-xl md:text-2xl">Customers</h1>
       <Search placeholder="Search customers..." />
       <Suspense key={query} fallback={<InvoicesTableSkeleton />}>
         <CustomersTable
